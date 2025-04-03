@@ -1,5 +1,8 @@
 credentials.json
 token.pickle
+exported_slides/
+
+.DS_Store
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
