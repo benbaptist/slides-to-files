@@ -8,6 +8,7 @@ import pickle
 from urllib.parse import urlparse, parse_qs
 import requests
 from dotenv import load_dotenv
+import base64
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/presentations.readonly']
@@ -48,15 +49,34 @@ def extract_presentation_id(url):
     
     return match.group(1)
 
-def download_slide_as_png(export_url, filename):
-    """Download a slide as PNG."""
-    response = requests.get(export_url)
-    if response.status_code == 200:
-        with open(filename, 'wb') as f:
-            f.write(response.content)
-        print(f"Successfully downloaded {filename}")
-    else:
-        print(f"Failed to download {filename}")
+def download_slide_as_png(service, presentation_id, slide_id, page_number, output_dir):
+    """Download a slide as PNG using the official export method."""
+    try:
+        # Request the slide as PNG using the presentations.pages.getThumbnail endpoint
+        response = service.presentations().pages().getThumbnail(
+            presentationId=presentation_id,
+            pageObjectId=slide_id,
+            thumbnailProperties_thumbnailSize='LARGE'
+        ).execute()
+        
+        # Get the thumbnail URL from the response
+        thumbnail_url = response.get('contentUrl')
+        if not thumbnail_url:
+            print(f"Failed to get thumbnail URL for slide {page_number}")
+            return
+        
+        # Download the image
+        image_response = requests.get(thumbnail_url)
+        if image_response.status_code == 200:
+            filename = os.path.join(output_dir, f"slide_{page_number:03d}.png")
+            with open(filename, 'wb') as f:
+                f.write(image_response.content)
+            print(f"Successfully downloaded {filename}")
+        else:
+            print(f"Failed to download slide {page_number}")
+            
+    except Exception as e:
+        print(f"Error downloading slide {page_number}: {str(e)}")
 
 def export_slides_to_png(presentation_url):
     """Export all slides from a presentation to PNG files."""
@@ -81,12 +101,8 @@ def export_slides_to_png(presentation_url):
         
         # Export each slide
         for i, slide in enumerate(slides, 1):
-            # Construct the export URL
-            export_url = f"https://docs.google.com/presentation/d/{presentation_id}/export/png?id={presentation_id}&pageid={slide['objectId']}"
-            
-            # Download the slide
-            filename = os.path.join(output_dir, f"slide_{i:03d}.png")
-            download_slide_as_png(export_url, filename)
+            slide_id = slide.get('objectId')
+            download_slide_as_png(service, presentation_id, slide_id, i, output_dir)
             
         print("\nExport completed!")
         
