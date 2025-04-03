@@ -46,6 +46,7 @@ jobs:
             type=sha
 
       - name: Build and push Docker image
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -62,6 +63,18 @@ jobs:
           chmod +x container-structure-test-linux-amd64
           sudo mv container-structure-test-linux-amd64 /usr/local/bin/container-structure-test
 
+      - name: Debug Info
+        run: |
+          echo "Current directory: $(pwd)"
+          echo "Contents of directory:"
+          ls -la
+          echo "First tag from metadata:"
+          echo "${{ steps.meta.outputs.tags }}" | head -n1
+
       - name: Run Container Structure Tests
         run: |
-          container-structure-test test --image ${{ steps.meta.outputs.tags }} --config container-structure-test.yaml 
+          FIRST_TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n1)
+          container-structure-test test \
+            --image "${FIRST_TAG}" \
+            --config "${GITHUB_WORKSPACE}/container-structure-test.yaml" \
+            -v debug 
