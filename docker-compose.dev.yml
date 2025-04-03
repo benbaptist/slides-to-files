@@ -2,7 +2,10 @@ version: '3.8'
 
 services:
   slides-exporter:
-    image: ghcr.io/benbaptist/slides-to-files:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: slides-exporter:1.0
     container_name: slides-exporter
     volumes:
       - ${CREDENTIALS_PATH:-./credentials.json}:/app/credentials.json:ro

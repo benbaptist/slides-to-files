@@ -1,39 +1,66 @@
 # Google Slides to PNG Exporter
 
-This script allows you to export all slides from a Google Slides presentation as individual PNG files, with proper numbering.
+A secure Docker container that exports Google Slides presentations to high-quality PNG files, with proper slide numbering. Perfect for creating presentation archives or generating slide images for web use.
 
-## Setup
+## Quick Start (Using Docker)
 
-1. Install the required dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-2. Set up Google Cloud Project and enable the Google Slides API:
+1. **Set up Google Cloud Project**:
    - Go to the [Google Cloud Console](https://console.cloud.google.com/)
    - Create a new project or select an existing one
    - Enable the Google Slides API for your project
    - Create credentials (OAuth 2.0 Client ID)
-   - Download the credentials and save them as `credentials.json` in the same directory as the script
+   - Download the credentials and save them as `credentials.json`
 
-## Usage
-
-1. Run the script:
+2. **Run the Container**:
    ```bash
-   python export_slides.py
+   # Create a directory for exported slides
+   mkdir exported_slides
+
+   # Run the container
+   docker compose up
+
+   # Or with custom paths:
+   CREDENTIALS_PATH=/path/to/credentials.json \
+   TOKEN_PATH=/path/to/token.pickle \
+   EXPORT_PATH=/path/to/exports \
+   docker compose up
    ```
 
-2. When prompted, enter the Google Slides URL. The URL should be in one of these formats:
-   - `https://docs.google.com/presentation/d/[PRESENTATION_ID]/edit`
-   - `https://docs.google.com/presentation/d/[PRESENTATION_ID]/view`
+3. **Use the Exporter**:
+   - On first run, follow the OAuth authentication prompt in your browser
+   - Enter the Google Slides URL when prompted (formats supported):
+     - `https://docs.google.com/presentation/d/[PRESENTATION_ID]/edit`
+     - `https://docs.google.com/presentation/d/[PRESENTATION_ID]/view`
+   - Slides will be exported to the `exported_slides` directory (or your custom `EXPORT_PATH`)
 
-3. On first run, the script will open your browser for Google OAuth authentication. Follow the prompts to authorize the application.
+## Environment Variables
 
-4. The slides will be exported as PNG files in the `exported_slides` directory, named as `slide_001.png`, `slide_002.png`, etc.
+- `CREDENTIALS_PATH`: Path to your Google OAuth credentials file (default: `./credentials.json`)
+- `TOKEN_PATH`: Path to store the OAuth token (default: `./token.pickle`)
+- `EXPORT_PATH`: Directory where slides will be exported (default: `./exported_slides`)
+
+## Development
+
+For development purposes, use the development compose file:
+
+```bash
+docker compose -f docker-compose.dev.yml up
+```
+
+This will build the container from source instead of using the pre-built image.
+
+## Security Features
+
+This container runs with several security enhancements:
+- Read-only filesystem
+- Dropped capabilities
+- No privilege escalation
+- Temporary filesystem for volatile data
 
 ## Notes
 
-- The script requires an active internet connection
-- Make sure the Google Slides presentation is accessible to your Google account
-- The exported PNG files will be in the same resolution as they appear in Google Slides
-- Your authentication tokens will be saved in `token.pickle` for future use 
+- Requires an active internet connection
+- The Google Slides presentation must be accessible to your Google account
+- Exported PNG files maintain the original slide resolution
+- Authentication tokens are saved in `token.pickle` for future use
+- The container automatically handles Google OAuth authentication 
