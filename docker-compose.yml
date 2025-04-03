@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  slides-exporter:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: slides-exporter:1.0
+    container_name: slides-exporter
+    volumes:
+      - ${CREDENTIALS_PATH:-./credentials.json}:/app/credentials.json:ro
+      - ${TOKEN_PATH:-./token.pickle}:/app/token.pickle:ro
+      - ${EXPORT_PATH:-./exported_slides}:/app/exported_slides
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: "no"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp 
