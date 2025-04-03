@@ -54,9 +54,14 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          load: true
 
-      - name: Test container structure
-        uses: docker/container-structure-test@v0.3.0
-        with:
-          image: ${{ steps.meta.outputs.tags }}
-          config: container-structure-test.yaml 
+      - name: Install Container Structure Test
+        run: |
+          curl -LO https://storage.googleapis.com/container-structure-test/latest/container-structure-test-linux-amd64
+          chmod +x container-structure-test-linux-amd64
+          sudo mv container-structure-test-linux-amd64 /usr/local/bin/container-structure-test
+
+      - name: Run Container Structure Tests
+        run: |
+          container-structure-test test --image ${{ steps.meta.outputs.tags }} --config container-structure-test.yaml 
